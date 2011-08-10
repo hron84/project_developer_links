@@ -1,0 +1,37 @@
+<?php
+
+function _project_developer_links_get_status($sid) {
+    $state = db_result(db_query('SELECT pis.name FROM {project_issue_state} pis WHERE pis.sid = %d', $sid));
+    return !empty($state) ? $state : FALSE;
+}
+
+
+function project_developer_links_project_page_link_alter(&$links, $project) {
+
+    $issue_links = array();
+    $results = db_query('SELECT pi.* FROM {project_issues} pi INNER JOIN {node} n ON n.nid = pi.nid WHERE pi.pid = %d', $project->nid);
+    # | nid | pid | category | component | priority | rid | assigned | sid | original_issue_data                                                                                                                                                                                 | last_comment_id | db_lock |
+    if($results->num_rows < 1) {
+        return;
+    }
+
+    while($issue = db_fetch_object($results)) {
+        $issue->node = node_load($issue->nid);
+        if($issue->sid == PROJECT_ISSUE_STATE_FIXED || $issue->sid == PROJECT_ISSUE_STATE_FIXED) {
+            continue;
+        }
+        $issue->state_title = _project_developer_links_get_status($issue->sid);
+
+        $key = 'issue-' . $issue->nid;
+
+        $issue_links[$key] = l($issue->node->title . " (" . t($issue->state_title) . ")", 'node/' . $issue->nid);
+    }
+
+    $links['tasks'] = array( 
+        'name' => t('Issues'),
+        'weight' => 10,
+        'type' => 'inline',
+        'links' => $issue_links,
+    );
+
+}

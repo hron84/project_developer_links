@@ -1,0 +1,9 @@
+name = Project developer links
+description = Adds issue links to a project node
+dependencies[] = project
+dependencies[] = project_issue
+core = 6.x
+
+version = "1.0"
+core = "6.x"
+project = "project_developer_links"
